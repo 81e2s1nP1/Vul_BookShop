@@ -9,22 +9,35 @@ import {
   CardActionArea,
 } from "@material-ui/core";
 import { AddShoppingCart } from "@material-ui/icons";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import useStyles from "./styles";
 
 const Product = ({ product, onAddToCart }) => {
   const classes = useStyles();
+  const history = useHistory();
+
+  const handleClick = async () => {
+    try {
+      const response = await TodoService.getBook(product.name);
+      
+      console.log('API response:', response.data);
+
+      history.push(`/product-view/${product.id}`);
+    } catch (error) {
+      console.error('Error calling API', error);
+    }
+  };
+
+
   return (
     <Card className={classes.root}>
-      <Link to={`product-view/${product.id}`}>
-        <CardActionArea>
+        <CardActionArea onClick={handleClick}>
           <CardMedia
             className={classes.media}
             image={product.media.source}
             title={product.name}
           />
         </CardActionArea>
-      </Link>
       <CardContent>
         <div className={classes.cardContent}>
           <p className={classes.cardContentName}> {product.name}</p>
@@ -42,7 +55,7 @@ const Product = ({ product, onAddToCart }) => {
           endIcon={<AddShoppingCart />}
           onClick={() => onAddToCart(product.id, 1)}
         >
-          <b>ADD TO CART</b>
+          <b onClick={handleClick}>VIEW DETAILS</b>
         </Button>
       </CardActions>
     </Card>

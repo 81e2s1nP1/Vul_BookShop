@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Grid, Button, Typography } from "@material-ui/core";
 import { Link } from "react-router-dom";
 import { commerce } from "../../lib/commerce";
-import { useState, useEffect } from "react";
 import "./style.css";
 
 const createMarkup = (text) => {
@@ -13,21 +12,29 @@ const ProductView = () => {
   const [product, setProduct] = useState({});
 
   const fetchProduct = async (id) => {
-    const response = await commerce.products.retrieve(id);
-    console.log({ response });
-    const { name, price, media, quantity, description } = response;
-    setProduct({
-      name,
-      quantity,
-      description,
-      src: media.source,
-      price: price.formatted_with_symbol,
-    });
+    try {
+      const response = await commerce.products.retrieve(id);
+      console.log({ response });
+
+      const productData = response[0];
+
+      const { bookName, bookDownload, authors } = productData;
+      setProduct({
+        name: bookName,
+        src: bookDownload.bookIMG, 
+        downloadLink: bookDownload.bookURL, 
+        author: authors.authorName || "Unknown Author", 
+        description: productData.description || "No description available", 
+        price: productData.price ? productData.price.formatted_with_symbol : "N/A", // Thêm điều kiện cho giá
+      });
+    } catch (error) {
+      console.error('Error fetching product:', error);
+    }
   };
 
   useEffect(() => {
-    const id = window.location.pathname.split("/");
-    fetchProduct(id[2]);
+    const id = window.location.pathname.split("/")[2]; // Lấy id từ URL
+    fetchProduct(id);
   }, []);
 
   return (
@@ -40,12 +47,15 @@ const ProductView = () => {
           <Typography variant="h2">
             <b>{product.name}</b>
           </Typography>
+          <Typography variant="h5">
+            <b>Author: {product.author}</b>
+          </Typography>
           <Typography
             variant="p"
             dangerouslySetInnerHTML={createMarkup(product.description)}
           />
           <Typography variant="h3" color="secondary">
-            Price: <b> {product.price} </b>
+            <a href={product.downloadLink}>Download</a>
           </Typography>
           <br />
           <Grid container spacing={0}>
@@ -56,7 +66,7 @@ const ProductView = () => {
                 component={Link}
                 to="/"
               >
-                Continue Shopping
+                See more books
               </Button>
             </Grid>
           </Grid>
